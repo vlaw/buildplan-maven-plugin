@@ -18,7 +18,12 @@ package org.codehaus.mojo.buildplan;
 import static java.lang.System.lineSeparator;
 
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -49,8 +54,14 @@ public class ListPluginMojo extends AbstractLifecycleMojo {
 
         StringBuilder output = new StringBuilder();
         TableDescriptor descriptor = ListPluginTableDescriptor.of(plan.values(), defaultLifecycles);
-        for (Map.Entry<String, Collection<MojoExecution>> executions :
-                plan.asMap().entrySet()) {
+
+        List<Map.Entry<String, Collection<MojoExecution>>> collect = plan.asMap()
+                                                                          .entrySet()
+                                                                          .stream()
+                                                                          .sorted((o1, o2) -> o1.getKey().compareTo(o2.getKey()))
+                                                                          .collect(Collectors.toList());
+
+        for (Map.Entry<String, Collection<MojoExecution>> executions : collect) {
             output.append(lineSeparator()).append(pluginTitleLine(descriptor, executions.getKey()));
             for (MojoExecution execution : executions.getValue()) {
                 output.append(lineSeparator()).append(line(descriptor.rowFormat(), execution));
